@@ -1,5 +1,11 @@
 #include "systemcalls.h"
-
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <stdarg.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 /**
  * @param cmd the command to execute with system()
  * @return true if the command in @param cmd was executed
@@ -16,8 +22,12 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
-    return true;
+    int ret = system(cmd);
+    if (ret ==0 ){
+        return true;
+    }else {
+        return false;
+    }
 }
 
 /**
@@ -58,10 +68,35 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    pid_t pid=fork();
+    int status ;
+    if (pid <0 ) {
+        perror("Fork Failed");
+        return false;
+    } else if ( !pid ) {
+        //child process 
+        int ret = execv(command[0],command);
+        if (ret == -1) {
+			//command failed 
+			exit (EXIT_FAILURE);
+		}
+		
+    }
+    //parent process 
+    if ( waitpid(pid,&status,0) == -1 ){
+		perror("Failed to wait for child!");
+        return false;
+    }
+    if (!WIFEXITED(status)) {
+		perror("Failed to get exit code!");
+	} else {
+		if (WEXITSTATUS(status) != 0) {
+            return false;
+        }
+    }
 
     va_end(args);
-
-    return true;
+    return true ;
 }
 
 /**
@@ -92,8 +127,46 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    int fd = open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+    // Redirect stdout to the file descriptor
+    if (dup2(fd, STDOUT_FILENO) == -1) {
+        perror("dup2");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+    close(fd); 
+    pid_t pid=fork();
+    int status ;
+    if (pid <0 ) {
+        perror("Fork Failed");
+        return false;
+    } else if ( !pid ) {
+        //child process 
+        int ret = execv(command[0],command);
+        if (ret == -1) {
+			//command failed 
+			exit (EXIT_FAILURE);
+		}
+		
+    }
+    //parent process 
+    if ( waitpid(pid,&status,0) == -1 ){
+		perror("Failed to wait for child!");
+        return false;
+    }
+    if (!WIFEXITED(status)) {
+		perror("Failed to get exit code!");
+	} else {
+		if (WEXITSTATUS(status) != 0) {
+            return false;
+        }
+    }
 
+    
     va_end(args);
-
     return true;
 }
