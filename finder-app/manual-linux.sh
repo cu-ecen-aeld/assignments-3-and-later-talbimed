@@ -50,13 +50,17 @@ echo "Creating the staging directory for the root filesystem"
 cd "$OUTDIR"
 
 echo "Adding the Image in outdir"
+
+cp ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ${OUTDIR}/
+
+echo "Adding the Image in outdir"
 cp linux-stable/arch/${ARCH}/boot/Image .
 ls -lah ./Image
 
 if [ -d "${OUTDIR}/rootfs" ]
 then
 	echo "Deleting rootfs directory at ${OUTDIR}/rootfs and starting over"
-    sudo rm  -rf ${OUTDIR}/rootfs
+    sudo rm  -r ${OUTDIR}/rootfs
 fi
 
 # TODO: Create necessary base directories
