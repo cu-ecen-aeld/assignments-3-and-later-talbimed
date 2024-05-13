@@ -34,6 +34,9 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     echo "Checking out version ${KERNEL_VERSION}"
     git checkout ${KERNEL_VERSION}
 
+    git config --global user.email "talbimed@outlook.fr"
+    git config --global user.name "talbimed"
+
     git am ${FINDER_APP_DIR}/dtc-Remove-redundant-YYLOC-global-declaratio.patch
     # TODO: Add your kernel build steps here
 
